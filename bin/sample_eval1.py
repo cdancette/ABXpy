@@ -19,7 +19,7 @@ import pickle
 from ABXpy.misc import any2h5features
 import pandas
 import ast
-
+import shutil
 
 version="0.2.1"
 
@@ -205,11 +205,14 @@ def makedirs(listfiles):
                 raise
 
 
-def fullrun(task, feature_folder, distance, outputdir, doall=True, ncpus=None, keepcsv=False):
+def fullrun(task, input_feature_file, distance, outputdir, doall=True, ncpus=None, keepcsv=False):
 
     print("Processing task {}".format(task['section']))
 
     feature_file = os.path.join(outputdir, lookup('featurefile', task))
+    
+    shutil.copyfile(input_feature_file, feature_file)
+    feature_file = input_feature_file
 
     try:
         if distance:
@@ -249,22 +252,16 @@ def fullrun(task, feature_folder, distance, outputdir, doall=True, ncpus=None, k
     distancetime = getmtime(distance_file)
     scoretime = getmtime(scorefilename)
     analyzetime = getmtime(analyzefilename)
-    featfoldertime = max([getmtime(os.path.join(feature_folder, f))
-                          for f in os.listdir(feature_folder)])
+    featfoldertime = getmtime(input_feature_file)
 
     # Preprocessing
     try:
-        print("Preprocessing... Writing the features in h5 format")
-        tryremove(feature_file)
-        any2h5features.convert(feature_folder, h5_filename=feature_file,
-                               load=loadfeats)
-        featuretime = getmtime(feature_file)
         with h5py.File(feature_file) as fh:
             fh.attrs.create('done', True)
     except:
         sys.stderr.write('Error when writing the features from {} to {}\n'
                          'Check the paths availability\n'
-                         .format(os.path.realpath(feature_folder),
+                         .format(os.path.realpath(input_feature_file),
                                  os.path.realpath(feature_file)))
         tryremove(feature_file)
         raise
@@ -291,7 +288,6 @@ def fullrun(task, feature_folder, distance, outputdir, doall=True, ncpus=None, k
     finally:
         tryremove(distance_file)
         tryremove(scorefilename)
-        tryremove(feature_file)
         if not keepcsv:
             tryremove(analyzefilename)
 
@@ -324,8 +320,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     config = os.path.join(curdir, 'resources/sample_eval.cfg')
     taskslist = parseConfig(config)
-    assert os.path.isdir(args.features) and os.listdir(args.features), (
-        'features folder not found or empty')
+
     if not os.path.exists(args.output):
         try:
             os.makedirs(args.output)
