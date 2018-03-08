@@ -211,9 +211,6 @@ def fullrun(task, input_feature_file, distance, outputdir, doall=True, ncpus=Non
 
     feature_file = os.path.join(outputdir, lookup('featurefile', task))
     
-    shutil.copyfile(input_feature_file, feature_file)
-    feature_file = input_feature_file
-
     try:
         if distance:
             distancepair = distance.split('.')
@@ -246,6 +243,11 @@ def fullrun(task, input_feature_file, distance, outputdir, doall=True, ncpus=Non
         ncpus = int(lookup('ncpus', task, 1))
 
     makedirs([feature_file, distance_file, scorefilename, analyzefilename])
+    print(input_feature_file)
+    print(feature_file)
+    shutil.copyfile(input_feature_file, feature_file)
+    feature_file = input_feature_file
+
 
     tasktime = getmtime(taskfilename)
     featuretime = getmtime(feature_file)
