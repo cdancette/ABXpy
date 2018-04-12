@@ -37,7 +37,7 @@ def create_distance_jobs(pair_file, distance_file, n_cpu):
     # files
 
     # getting 'by' datasets characteristics
-    with h5py.File(pair_file) as fh:
+    with h5py.File(pair_file, 'r') as fh:
         by_dsets = [by_dset for by_dset in fh['unique_pairs']]
         by_n_pairs = []  # number of distances to be computed for each by db
         for by_dset in by_dsets:
